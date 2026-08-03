@@ -29,6 +29,7 @@ function Contact() {
   const { contact_id } = useParams()
   const navigate = useNavigate()
   const { 
+    contacts,
     getContactById, 
     messages, 
     createMessage, 
@@ -50,7 +51,11 @@ function Contact() {
   const [editName, setEditName] = useState("")
   const [editPhone, setEditPhone] = useState("")
   const [editConn, setEditConn] = useState("")
-
+  const [editDesc, setEditDesc] = useState("")
+  const [showAddMemberModal, setShowAddMemberModal] = useState(false)
+  const [showRemoveMemberModal, setShowRemoveMemberModal] = useState(false)
+  const [selectedAddMembers, setSelectedAddMembers] = useState([])
+  const [selectedRemoveMembers, setSelectedRemoveMembers] = useState([])
   const chatEndRef = useRef(null)
 
   const contacto = getContactById(contact_id)
@@ -126,10 +131,19 @@ function Contact() {
     e.preventDefault()
     if (!messageText.trim()) return
 
+    let senderId = undefined;
+    if (!sendByMe && contacto.isGroup) {
+      const members = contacto.integrantes || [1, 2, 3];
+      if (members.length > 0) {
+        senderId = members[Math.floor(Math.random() * members.length)];
+      }
+    }
+
     createMessage({
       contactId: contacto.id,
       texto: messageText,
-      sentByMe: sendByMe
+      sentByMe: sendByMe,
+      senderId: senderId
     })
 
     setMessageText("")
@@ -147,6 +161,7 @@ function Contact() {
     setEditName(contacto.nombre || '')
     setEditPhone(contacto.telefono || '+54 9 11 1234-5678')
     setEditConn(contacto.fecha_ult_conexion || 'En línea')
+    setEditDesc(contacto.descripcion || '')
     setShowEditModal(true)
   }
 
@@ -156,9 +171,42 @@ function Contact() {
     updateContactById(contacto.id, {
       nombre: editName,
       telefono: editPhone,
-      fecha_ult_conexion: editConn
+      fecha_ult_conexion: editConn,
+      descripcion: editDesc
     })
     setShowEditModal(false)
+  }
+
+  const updateGroupInfo = (newIntegrantes) => {
+    const memberNames = newIntegrantes.map(id => getContactById(id)?.nombre).filter(Boolean)
+    const membersSummary = `${memberNames.length + 1} miembros: Tú${memberNames.length > 0 ? ', ' + memberNames.join(', ') : ''}`
+    updateContactById(contacto.id, { 
+      integrantes: newIntegrantes,
+      telefono: membersSummary,
+      fecha_ult_conexion: `Grupo · ${newIntegrantes.length + 1} miembros`
+    })
+  }
+
+  const handleSaveAddMembers = () => {
+    const newIntegrantes = [...(contacto.integrantes || []), ...selectedAddMembers]
+    updateGroupInfo(newIntegrantes)
+    setShowAddMemberModal(false)
+  }
+
+  const handleSaveRemoveMembers = () => {
+    const newIntegrantes = (contacto.integrantes || []).filter(id => !selectedRemoveMembers.includes(id))
+    updateGroupInfo(newIntegrantes)
+    setShowRemoveMemberModal(false)
+  }
+
+  const toggleMemberSelection = (id, isAdd) => {
+    if (isAdd) {
+      if (selectedAddMembers.includes(id)) setSelectedAddMembers(selectedAddMembers.filter(m => m !== id))
+      else setSelectedAddMembers([...selectedAddMembers, id])
+    } else {
+      if (selectedRemoveMembers.includes(id)) setSelectedRemoveMembers(selectedRemoveMembers.filter(m => m !== id))
+      else setSelectedRemoveMembers([...selectedRemoveMembers, id])
+    }
   }
 
   const currentWallpaper = contacto.wallpaper || '4'
@@ -188,17 +236,17 @@ function Contact() {
         <div 
           className="chat-header-user-clickable" 
           onClick={() => setShowInfoModal(true)}
-          title="Toca para ver la info del contacto"
+          title={contacto.isGroup ? "Toca para ver la info del grupo" : "Toca para ver la info del contacto"}
         >
           <div 
             className="chat-avatar" 
-            style={{ backgroundColor: contacto.avatarColor || '#3b82f6' }}
+            style={contacto.avatar ? { backgroundImage: `url(${contacto.avatar})`, backgroundSize: 'cover', backgroundPosition: 'center', backgroundColor: contacto.avatarColor || '#3b82f6' } : { backgroundColor: contacto.avatarColor || '#3b82f6' }}
           >
-            {contacto.isGroup ? <span className="material-symbols-outlined" style={{ fontSize: '24px' }}>group</span> : contacto.nombre.slice(0, 2).toUpperCase()}
+            {contacto.avatar ? null : (contacto.isGroup ? <span className="material-symbols-outlined" style={{ fontSize: '24px' }}>group</span> : contacto.nombre.slice(0, 2).toUpperCase())}
           </div>
           <div className="chat-header-info">
             <h2>{contacto.nombre}</h2>
-            <span className="connection-status">{contacto.fecha_ult_conexion}</span>
+            <span className="connection-status">{contacto.isGroup ? `Grupo · ${(contacto.integrantes?.length || 0) + 1} miembros` : contacto.fecha_ult_conexion}</span>
           </div>
         </div>
 
@@ -231,14 +279,35 @@ function Contact() {
             
             const msg = item;
             const isSelected = activeMsgId === msg.id;
+
+            // Resolve sender info for group messages
+            let sender = null;
+            if (contacto.isGroup && !msg.sentByMe && msg.senderId) {
+              sender = getContactById(msg.senderId);
+            }
+
             return (
               <div 
                 key={msg.id} 
-                className={`message-row ${msg.sentByMe ? 'sent' : 'received'} ${isSelected ? 'has-dropdown' : ''}`}
+                className={`message-row ${msg.sentByMe ? 'sent' : 'received'} ${isSelected ? 'has-dropdown' : ''} ${contacto.isGroup ? 'is-group' : ''}`}
               >
+                {contacto.isGroup && !msg.sentByMe && (
+                  <div 
+                    className="message-group-avatar" 
+                    style={sender?.avatar ? { backgroundImage: `url(${sender.avatar})`, backgroundSize: 'cover', backgroundPosition: 'center' } : { backgroundColor: sender?.avatarColor || '#9ca3af', backgroundImage: sender?.isGroup ? 'none' : 'none' }}
+                    title={sender?.nombre || 'Desconocido'}
+                  >
+                    {sender?.avatar ? null : (sender ? sender.nombre.slice(0, 2).toUpperCase() : '?')}
+                  </div>
+                )}
                 <div 
                   className={`message-bubble ${isSelected ? 'selected' : ''}`}
                 >
+                  {contacto.isGroup && !msg.sentByMe && sender && (
+                    <div className="message-sender-name" style={{ color: sender.avatarColor || '#0ea5e9' }}>
+                      {sender.nombre}
+                    </div>
+                  )}
                   <span className="message-text">{msg.texto}</span>
                   <span className="message-meta">
                     <span className="message-time">{formatWhatsAppTime(msg.fecha)}</span>
@@ -287,7 +356,7 @@ function Contact() {
             className={`btn-toggle-sender ${sendByMe ? 'me' : 'them'}`}
             onClick={() => setSendByMe(!sendByMe)}
           >
-            {sendByMe ? 'Enviado (Yo)' : 'Recibido (Contacto)'}
+            {sendByMe ? 'Enviado (Yo)' : (contacto.isGroup ? 'Recibido (Grupo)' : 'Recibido (Contacto)')}
           </button>
         </div>
 
@@ -309,7 +378,7 @@ function Contact() {
         <div className="chat-modal-overlay" onClick={() => setShowInfoModal(false)}>
           <div className="info-modal-card" onClick={(e) => e.stopPropagation()}>
             <div className="info-modal-header">
-              <h2>Info del contacto</h2>
+              <h2>{contacto.isGroup ? "Info del grupo" : "Info del contacto"}</h2>
               <button 
                 className="btn-close-modal" 
                 onClick={() => setShowInfoModal(false)}
@@ -322,14 +391,25 @@ function Contact() {
             <div className="info-modal-body">
               <div 
                 className="info-avatar" 
-                style={{ backgroundColor: contacto.avatarColor || '#3b82f6' }}
+                style={contacto.avatar ? { backgroundImage: `url(${contacto.avatar})`, backgroundSize: 'cover', backgroundPosition: 'center', backgroundColor: contacto.avatarColor || '#3b82f6' } : { backgroundColor: contacto.avatarColor || '#3b82f6' }}
               >
-                {contacto.isGroup ? <span className="material-symbols-outlined" style={{ fontSize: '100px' }}>group</span> : contacto.nombre.slice(0, 2).toUpperCase()}
+                {contacto.avatar ? null : (contacto.isGroup ? <span className="material-symbols-outlined" style={{ fontSize: '54px' }}>group</span> : contacto.nombre.slice(0, 2).toUpperCase())}
               </div>
 
               <h3 className="info-name">{contacto.nombre}</h3>
-              <p className="info-phone">Teléfono: {contacto.telefono || '+54 9 11 1234-5678'}</p>
-              <p className="info-status">Estado: {contacto.fecha_ult_conexion || 'En línea'}</p>
+              {contacto.isGroup && (
+                <p className="info-description" style={{ fontSize: '14px', color: 'var(--wa-text-secondary)', marginBottom: '12px', padding: '0 10px', wordBreak: 'break-word', whiteSpace: 'pre-wrap' }}>
+                  {contacto.descripcion || 'Sin descripción'}
+                </p>
+              )}
+              {contacto.isGroup ? (
+                <p className="info-phone" style={{ fontWeight: 500, margin: '8px 0 16px 0' }}>Miembros: {(contacto.integrantes?.length || 0) + 1}</p>
+              ) : (
+                <>
+                  <p className="info-phone">Teléfono: {contacto.telefono || '+54 9 11 1234-5678'}</p>
+                  <p className="info-status">Estado: {contacto.fecha_ult_conexion || 'En línea'}</p>
+                </>
+              )}
 
               <div className="info-action-buttons">
                 <button 
@@ -339,7 +419,7 @@ function Contact() {
                     startEdit()
                   }}
                 >
-                  Editar contacto
+                  {contacto.isGroup ? "Editar grupo" : "Editar contacto"}
                 </button>
                 <button 
                   className="btn-info-action btn-wallpaper"
@@ -354,7 +434,7 @@ function Contact() {
                   className="btn-info-action btn-delete"
                   onClick={handleDelete}
                 >
-                  Eliminar contacto
+                  {contacto.isGroup ? "Eliminar grupo" : "Eliminar contacto"}
                 </button>
               </div>
             </div>
@@ -430,7 +510,7 @@ function Contact() {
       {showEditModal && (
         <div className="chat-modal-overlay" onClick={() => setShowEditModal(false)}>
           <div className="modal-card" onClick={(e) => e.stopPropagation()}>
-            <h2>Editar Contacto</h2>
+            <h2>{contacto.isGroup ? "Editar grupo" : "Editar contacto"}</h2>
             <form onSubmit={handleSaveEdit}>
               <div className="form-group">
                 <label>Nombre</label>
@@ -442,23 +522,50 @@ function Contact() {
                   autoFocus
                 />
               </div>
-              <div className="form-group">
-                <label>Teléfono</label>
-                <input 
-                  type="text" 
-                  value={editPhone} 
-                  onChange={e => setEditPhone(e.target.value)} 
-                  required
-                />
-              </div>
-              <div className="form-group">
-                <label>Última conexión / Estado</label>
-                <input 
-                  type="text" 
-                  value={editConn} 
-                  onChange={e => setEditConn(e.target.value)} 
-                />
-              </div>
+              {contacto.isGroup && (
+                <div className="form-group">
+                  <label>Descripción del grupo</label>
+                  <textarea 
+                    value={editDesc} 
+                    onChange={e => setEditDesc(e.target.value)} 
+                    rows="3"
+                    style={{ width: '100%', padding: '8px', borderRadius: '8px', border: '1px solid var(--wa-sidebar-border)', backgroundColor: 'var(--wa-search-input-bg)', color: 'var(--wa-text-primary)', fontFamily: 'inherit', resize: 'vertical' }}
+                  />
+                </div>
+              )}
+              {!contacto.isGroup && (
+                <>
+                  <div className="form-group">
+                    <label>Teléfono</label>
+                    <input 
+                      type="text" 
+                      value={editPhone} 
+                      onChange={e => setEditPhone(e.target.value)} 
+                      required
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>Última conexión / Estado</label>
+                    <input 
+                      type="text" 
+                      value={editConn} 
+                      onChange={e => setEditConn(e.target.value)} 
+                    />
+                  </div>
+                </>
+              )}
+              {contacto.isGroup && (
+                <div className="form-group" style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
+                  <button type="button" className="btn-secondary" onClick={() => { setSelectedAddMembers([]); setShowAddMemberModal(true); setShowEditModal(false); }} style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
+                    <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>person_add</span>
+                    Añadir contacto
+                  </button>
+                  <button type="button" className="btn-secondary" onClick={() => { setSelectedRemoveMembers([]); setShowRemoveMemberModal(true); setShowEditModal(false); }} style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', color: '#ef4444', borderColor: '#ef4444' }}>
+                    <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>person_remove</span>
+                    Eliminar contacto
+                  </button>
+                </div>
+              )}
               <div className="modal-buttons">
                 <button type="button" className="btn-secondary" onClick={() => setShowEditModal(false)}>
                   Cancelar
@@ -471,6 +578,69 @@ function Contact() {
           </div>
         </div>
       )}
+
+      {/* Add Members Modal */}
+      {showAddMemberModal && (
+        <div className="chat-modal-overlay" onClick={() => setShowAddMemberModal(false)}>
+          <div className="modal-card" onClick={(e) => e.stopPropagation()} style={{ maxHeight: '80vh', display: 'flex', flexDirection: 'column' }}>
+            <h2>Añadir contactos</h2>
+            <p style={{ color: 'var(--wa-text-secondary)', fontSize: '14px', marginBottom: '10px' }}>Selecciona los contactos que quieres añadir al grupo.</p>
+            <div className="group-members-select-list" style={{ overflowY: 'auto', margin: '15px 0' }}>
+              {contacts.filter(c => !c.isGroup && !(contacto.integrantes || []).includes(c.id)).map(contact => {
+                const isChecked = selectedAddMembers.includes(contact.id);
+                return (
+                  <div key={contact.id} className={`member-select-item ${isChecked ? 'selected' : ''}`} onClick={() => toggleMemberSelection(contact.id, true)} style={{ display: 'flex', alignItems: 'center', padding: '10px', borderBottom: '1px solid var(--wa-sidebar-border)', cursor: 'pointer', gap: '10px' }}>
+                    <input type="checkbox" checked={isChecked} readOnly />
+                    <div className="member-avatar-mini" style={{ width: '40px', height: '40px', borderRadius: '50%', backgroundImage: contact.avatar ? `url(${contact.avatar})` : 'none', backgroundSize: 'cover', backgroundPosition: 'center', backgroundColor: contact.avatarColor || '#3b82f6', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 'bold' }}>
+                      {contact.avatar ? null : contact.nombre.slice(0, 2).toUpperCase()}
+                    </div>
+                    <span style={{ fontWeight: 500, color: 'var(--wa-text-primary)' }}>{contact.nombre}</span>
+                  </div>
+                )
+              })}
+              {contacts.filter(c => !c.isGroup && !(contacto.integrantes || []).includes(c.id)).length === 0 && (
+                <p style={{ textAlign: 'center', color: 'var(--wa-text-secondary)', padding: '20px' }}>No hay más contactos disponibles para añadir.</p>
+              )}
+            </div>
+            <div className="modal-buttons" style={{ marginTop: 'auto' }}>
+              <button className="btn-secondary" onClick={() => setShowAddMemberModal(false)}>Cancelar</button>
+              <button className="btn-success" onClick={handleSaveAddMembers}>Añadir ({selectedAddMembers.length})</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Remove Members Modal */}
+      {showRemoveMemberModal && (
+        <div className="chat-modal-overlay" onClick={() => setShowRemoveMemberModal(false)}>
+          <div className="modal-card" onClick={(e) => e.stopPropagation()} style={{ maxHeight: '80vh', display: 'flex', flexDirection: 'column' }}>
+            <h2>Eliminar contactos</h2>
+            <p style={{ color: 'var(--wa-text-secondary)', fontSize: '14px', marginBottom: '10px' }}>Selecciona los contactos que quieres eliminar del grupo.</p>
+            <div className="group-members-select-list" style={{ overflowY: 'auto', margin: '15px 0' }}>
+              {contacts.filter(c => (contacto.integrantes || []).includes(c.id)).map(contact => {
+                const isChecked = selectedRemoveMembers.includes(contact.id);
+                return (
+                  <div key={contact.id} className={`member-select-item ${isChecked ? 'selected' : ''}`} onClick={() => toggleMemberSelection(contact.id, false)} style={{ display: 'flex', alignItems: 'center', padding: '10px', borderBottom: '1px solid var(--wa-sidebar-border)', cursor: 'pointer', gap: '10px' }}>
+                    <input type="checkbox" checked={isChecked} readOnly />
+                    <div className="member-avatar-mini" style={{ width: '40px', height: '40px', borderRadius: '50%', backgroundImage: contact.avatar ? `url(${contact.avatar})` : 'none', backgroundSize: 'cover', backgroundPosition: 'center', backgroundColor: contact.avatarColor || '#3b82f6', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 'bold' }}>
+                      {contact.avatar ? null : contact.nombre.slice(0, 2).toUpperCase()}
+                    </div>
+                    <span style={{ fontWeight: 500, color: 'var(--wa-text-primary)' }}>{contact.nombre}</span>
+                  </div>
+                )
+              })}
+              {contacts.filter(c => (contacto.integrantes || []).includes(c.id)).length === 0 && (
+                <p style={{ textAlign: 'center', color: 'var(--wa-text-secondary)', padding: '20px' }}>No hay integrantes en este grupo.</p>
+              )}
+            </div>
+            <div className="modal-buttons" style={{ marginTop: 'auto' }}>
+              <button className="btn-secondary" onClick={() => setShowRemoveMemberModal(false)}>Cancelar</button>
+              <button className="btn-success" style={{ backgroundColor: '#ef4444', borderColor: '#ef4444' }} onClick={handleSaveRemoveMembers}>Eliminar ({selectedRemoveMembers.length})</button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   )
 }
