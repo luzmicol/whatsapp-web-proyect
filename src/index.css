@@ -2,28 +2,86 @@
   /* Fonts */
   --wa-font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   
-  /* WhatsApp Light Theme Colors */
-  --wa-bg-app: #eae6df;
+  /* Custom WhatsApp Theme Colors */
+  --wa-bg-app: #161717;
+  --wa-bg-container: #161717;
+  
+  --wa-sidebar-bg: #161717;
+  --wa-sidebar-header-bg: #161717;
+  --wa-sidebar-border: #222d34;
+  
+  --wa-chat-bg: #161717;
+  --wa-chat-header-bg: #161717;
+  --wa-chat-input-bg: #242626;
+  --wa-chat-input-placeholder: #8696a0;
+  
+  --wa-search-bg: #161717;
+  --wa-search-input-bg: #242626;
+  --wa-search-input-text: #d1d7db;
+  
+  --wa-text-primary: #e9edef;
+  --wa-text-secondary: #8696a0;
+  --wa-text-meta: #8696a0;
+  
+  --wa-bubble-sent-bg: #005c4b;
+  --wa-bubble-sent-text: #e9edef;
+  --wa-bubble-received-bg: #202c33;
+  --wa-bubble-received-text: #e9edef;
+  
+  --wa-unread-badge-bg: #00a884;
+  --wa-unread-badge-text: #111b21;
+  
+  --wa-btn-icon-color: #aebac1;
+  --wa-btn-icon-hover: #374248;
+  
+  --wa-contact-hover: #202c33;
+  --wa-contact-active: #2a3942;
+  
+  --wa-accent: #00a884;
+  --wa-accent-light: #00c298;
+  --wa-accent-hover: #008a6c;
+  
+  --wa-modal-overlay: rgba(11, 20, 26, 0.85);
+  --wa-modal-bg: #222e35;
+  --wa-modal-border: #2d3f4b;
+  
+  --wa-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
+  --wa-border-color: #222d34;
+  --wa-bubble-shadow: 0 1px 0.5px rgba(0, 0, 0, 0.13);
+  
+  --wa-scrollbar-thumb: #374248;
+  --wa-scrollbar-thumb-hover: #4f5d64;
+  
+  /* Background Doodle Pattern values */
+  --wa-doodle-bg: #161717;
+  --wa-doodle-opacity: 0.06;
+  --wa-doodle-invert: 1;
+
+  --wa-chat-bg-image: url('/wallpapers/fondooscuro.jpg');
+}
+
+[data-theme="light"] {
+  --wa-bg-app: #ffffff;
   --wa-bg-container: #ffffff;
   
   --wa-sidebar-bg: #ffffff;
-  --wa-sidebar-header-bg: #f0f2f5;
+  --wa-sidebar-header-bg: #ffffff;
   --wa-sidebar-border: #e9edef;
   
   --wa-chat-bg: #efeae2;
-  --wa-chat-header-bg: #f0f2f5;
+  --wa-chat-header-bg: #ffffff;
   --wa-chat-input-bg: #f0f2f5;
-  --wa-chat-input-placeholder: #8696a0;
+  --wa-chat-input-placeholder: #54656f;
   
   --wa-search-bg: #ffffff;
   --wa-search-input-bg: #f0f2f5;
   --wa-search-input-text: #111b21;
   
   --wa-text-primary: #111b21;
-  --wa-text-secondary: #667781;
-  --wa-text-meta: #8696a0;
+  --wa-text-secondary: #54656f;
+  --wa-text-meta: #667781;
   
-  --wa-bubble-sent-bg: #d9fdd3;
+  --wa-bubble-sent-bg: #c6f5c7;
   --wa-bubble-sent-text: #111b21;
   --wa-bubble-received-bg: #ffffff;
   --wa-bubble-received-text: #111b21;
@@ -32,88 +90,24 @@
   --wa-unread-badge-text: #ffffff;
   
   --wa-btn-icon-color: #54656f;
-  --wa-btn-icon-hover: #eae6df;
+  --wa-btn-icon-hover: #f0f2f5;
   
-  --wa-contact-hover: #f0f2f5;
-  --wa-contact-active: #efeae2;
+  --wa-contact-hover: #f5f6f6;
+  --wa-contact-active: #f0f2f5;
   
-  --wa-accent: #00a884;
-  --wa-accent-light: #00c298;
-  --wa-accent-hover: #017c62;
-  
-  --wa-modal-overlay: rgba(240, 242, 245, 0.85);
+  --wa-modal-overlay: rgba(255, 255, 255, 0.85);
   --wa-modal-bg: #ffffff;
   --wa-modal-border: #e9edef;
   
-  --wa-shadow: 0 17px 50px 0 rgba(11, 20, 26, 0.19), 0 12px 15px 0 rgba(11, 20, 26, 0.24);
   --wa-border-color: #e9edef;
-  --wa-bubble-shadow: 0 1px 0.5px rgba(11, 20, 26, 0.13);
+  --wa-scrollbar-thumb: #ced0d1;
+  --wa-scrollbar-thumb-hover: #b0b4b6;
   
-  --wa-scrollbar-thumb: #c0c0c0;
-  --wa-scrollbar-thumb-hover: #a0a0a0;
-  
-  /* Background Doodle Pattern values */
   --wa-doodle-bg: #efeae2;
   --wa-doodle-opacity: 0.4;
   --wa-doodle-invert: 0;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    /* WhatsApp Dark Theme Colors */
-    --wa-bg-app: #0b141a;
-    --wa-bg-container: #111b21;
-    
-    --wa-sidebar-bg: #111b21;
-    --wa-sidebar-header-bg: #202c33;
-    --wa-sidebar-border: #222d34;
-    
-    --wa-chat-bg: #0b141a;
-    --wa-chat-header-bg: #202c33;
-    --wa-chat-input-bg: #202c33;
-    --wa-chat-input-placeholder: #8696a0;
-    
-    --wa-search-bg: #111b21;
-    --wa-search-input-bg: #202c33;
-    --wa-search-input-text: #d1d7db;
-    
-    --wa-text-primary: #e9edef;
-    --wa-text-secondary: #8696a0;
-    --wa-text-meta: #8696a0;
-    
-    --wa-bubble-sent-bg: #005c4b;
-    --wa-bubble-sent-text: #e9edef;
-    --wa-bubble-received-bg: #202c33;
-    --wa-bubble-received-text: #e9edef;
-    
-    --wa-unread-badge-bg: #00a884;
-    --wa-unread-badge-text: #111b21;
-    
-    --wa-btn-icon-color: #aebac1;
-    --wa-btn-icon-hover: #374248;
-    
-    --wa-contact-hover: #202c33;
-    --wa-contact-active: #2a3942;
-    
-    --wa-accent: #00a884;
-    --wa-accent-light: #00c298;
-    --wa-accent-hover: #008a6c;
-    
-    --wa-modal-overlay: rgba(11, 20, 26, 0.85);
-    --wa-modal-bg: #222e35;
-    --wa-modal-border: #2d3f4b;
-    
-    --wa-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
-    --wa-border-color: #222d34;
-    --wa-bubble-shadow: 0 1px 0.5px rgba(0, 0, 0, 0.13);
-    
-    --wa-scrollbar-thumb: #374248;
-    --wa-scrollbar-thumb-hover: #4f5d64;
-    
-    --wa-doodle-bg: #0b141a;
-    --wa-doodle-opacity: 0.06;
-    --wa-doodle-invert: 1;
-  }
+  
+  --wa-chat-bg-image: url('/wallpapers/modoclaro.jpg');
 }
 
 /* Global Normalization & Reset */

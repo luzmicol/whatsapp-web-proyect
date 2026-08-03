@@ -4,18 +4,29 @@ import initialContacts from './contacts';
 export const WhatsappContext = createContext();
 
 const initialMessages = [
-  { id: 1, contactId: 1, texto: "¡Hola! ¿Cómo va todo?", fecha: "10:30", sentByMe: false },
-  { id: 2, contactId: 1, texto: "¡Todo bien! ¿Y vos qué contás?", fecha: "10:32", sentByMe: true },
-  { id: 3, contactId: 1, texto: "Por acá terminando unas cosas del curso.", fecha: "10:33", sentByMe: false },
-  { id: 4, contactId: 2, texto: "Che, ¿sale algo hoy a la noche?", fecha: "15:00", sentByMe: false },
-  { id: 5, contactId: 2, texto: "¡Estaba por preguntarte lo mismo! Sí, dale.", fecha: "15:05", sentByMe: true },
-  { id: 6, contactId: 3, texto: "¿Terminaste de armar el proyecto nuevo?", fecha: "18:45", sentByMe: false }
+  { id: 1, contactId: 1, texto: "¡Hola! ¿Cómo va todo?", fecha: "10:30 a. m.", sentByMe: false },
+  { id: 2, contactId: 1, texto: "¡Todo bien! ¿Y vos qué contás?", fecha: "10:32 a. m.", sentByMe: true },
+  { id: 3, contactId: 1, texto: "Por acá terminando unas cosas del curso.", fecha: "10:33 a. m.", sentByMe: false },
+  { id: 4, contactId: 2, texto: "Che, ¿sale algo hoy a la noche?", fecha: "3:00 p. m.", sentByMe: false },
+  { id: 5, contactId: 2, texto: "¡Estaba por preguntarte lo mismo! Sí, dale.", fecha: "3:05 p. m.", sentByMe: true },
+  { id: 6, contactId: 3, texto: "¿Terminaste de armar el proyecto nuevo?", fecha: "6:45 p. m.", sentByMe: false },
+  { id: 7, contactId: 4, texto: "62678", fecha: "11:47 a. m.", sentByMe: true },
+  { id: 8, contactId: 4, texto: "17,17", fecha: "11:50 a. m.", sentByMe: true },
+  { id: 9, contactId: 4, texto: "los mensajes deben ser asi", fecha: "10:48 p. m.", sentByMe: true }
 ];
 
 export function WhatsappProvider({ children }) {
   const [contacts, setContacts] = useState(() => {
     const saved = localStorage.getItem('whatsapp_contacts');
-    return saved ? JSON.parse(saved) : initialContacts;
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      return parsed.map(c => ({
+        telefono: "+54 9 11 1234-5678",
+        wallpaper: "4",
+        ...c
+      }));
+    }
+    return initialContacts;
   });
 
   const [messages, setMessages] = useState(() => {
@@ -47,9 +58,14 @@ export function WhatsappProvider({ children }) {
     const newContact = {
       id: Date.now(),
       nombre: contactData.nombre || 'Sin nombre',
+      telefono: contactData.telefono || `+54 9 11 ${Math.floor(10000000 + Math.random() * 90000000)}`,
       fecha_ult_conexion: contactData.fecha_ult_conexion || 'Desconectado',
       mensajes_sin_ver: contactData.mensajes_sin_ver || 0,
-      avatarColor: contactData.avatarColor || '#3b82f6' // Default color
+      avatarColor: contactData.avatarColor || '#3b82f6',
+      wallpaper: contactData.wallpaper || '4',
+      isGroup: !!contactData.isGroup,
+      descripcion: contactData.descripcion || '',
+      integrantes: contactData.integrantes || []
     };
     setContacts(prev => [newContact, ...prev]);
     return newContact;
@@ -64,17 +80,18 @@ export function WhatsappProvider({ children }) {
   // 5. Create Message
   const createMessage = (messageData) => {
     const now = new Date();
-    const formattedDate = now.toLocaleTimeString('es-AR', {
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: false
-    });
+    const hours24 = now.getHours();
+    const minutes = now.getMinutes().toString().padStart(2, '0');
+    const ampm = hours24 >= 12 ? 'p. m.' : 'a. m.';
+    const hours12 = hours24 % 12 || 12;
+    const formattedTime = `${hours12}:${minutes} ${ampm}`;
     
     const newMessage = {
       id: Date.now(),
       contactId: messageData.contactId,
       texto: messageData.texto || '',
-      fecha: formattedDate,
+      fecha: formattedTime,
+      timestamp: now.getTime(),
       sentByMe: messageData.sentByMe !== undefined ? messageData.sentByMe : true
     };
     setMessages(prev => [...prev, newMessage]);
