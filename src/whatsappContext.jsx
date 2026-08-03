@@ -10,9 +10,9 @@ const initialMessages = [
   { id: 4, contactId: 2, texto: "Che, ¿sale algo hoy a la noche?", fecha: "3:00 p. m.", sentByMe: false },
   { id: 5, contactId: 2, texto: "¡Estaba por preguntarte lo mismo! Sí, dale.", fecha: "3:05 p. m.", sentByMe: true },
   { id: 6, contactId: 3, texto: "¿Terminaste de armar el proyecto nuevo?", fecha: "6:45 p. m.", sentByMe: false },
-  { id: 7, contactId: 4, texto: "62678", fecha: "11:47 a. m.", sentByMe: true },
-  { id: 8, contactId: 4, texto: "17,17", fecha: "11:50 a. m.", sentByMe: true },
-  { id: 9, contactId: 4, texto: "los mensajes deben ser asi", fecha: "10:48 p. m.", sentByMe: true }
+  { id: 7, contactId: 4, texto: "Chicos, ¿pudieron avanzar con el trabajo práctico de React?", fecha: "11:47 a. m.", sentByMe: false },
+  { id: 8, contactId: 4, texto: "Sí, yo ya armé los componentes base. Me falta estilizar.", fecha: "11:50 a. m.", sentByMe: false },
+  { id: 9, contactId: 4, texto: "¡Buenísimo! Yo me encargo de armar el estado global y los contextos esta noche.", fecha: "10:48 p. m.", sentByMe: true }
 ];
 
 export function WhatsappProvider({ children }) {
@@ -20,7 +20,10 @@ export function WhatsappProvider({ children }) {
     const saved = localStorage.getItem('whatsapp_contacts');
     if (saved) {
       const parsed = JSON.parse(saved);
-      return parsed.map(c => ({
+      // Merge missing contacts from initialContacts
+      const missingContacts = initialContacts.filter(ic => !parsed.find(pc => pc.id === ic.id));
+      const combined = [...parsed, ...missingContacts];
+      return combined.map(c => ({
         telefono: "+54 9 11 1234-5678",
         wallpaper: "4",
         ...c
@@ -31,7 +34,17 @@ export function WhatsappProvider({ children }) {
 
   const [messages, setMessages] = useState(() => {
     const saved = localStorage.getItem('whatsapp_messages');
-    return saved ? JSON.parse(saved) : initialMessages;
+    if (saved) {
+      let parsed = JSON.parse(saved);
+      // If the old dummy messages exist, replace them with the new study group ones
+      const hasOldDummy = parsed.find(m => m.id === 7 && m.texto === "62678");
+      if (hasOldDummy) {
+        parsed = parsed.filter(m => m.contactId !== 4);
+        parsed = [...parsed, ...initialMessages.filter(m => m.contactId === 4)];
+      }
+      return parsed;
+    }
+    return initialMessages;
   });
 
   // Persist states

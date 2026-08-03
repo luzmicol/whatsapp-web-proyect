@@ -26,7 +26,7 @@ const contacts = [
   {
     id: 4,
     nombre: "Grupo de Estudio UTN",
-    descripcion: "Grupo oficial para coordinar trabajos del curso",
+    descripcion: "Grupo para coordinar trabajos del curso",
     isGroup: true,
     integrantes: [1, 2, 3],
     telefono: "3 miembros: Pepe, Fede, Rocio",
