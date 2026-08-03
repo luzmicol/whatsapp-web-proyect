@@ -1028,6 +1028,7 @@
 
 .sender-toggle {
   display: flex;
+  flex-shrink: 0;
 }
 
 .btn-toggle-sender {
@@ -1064,6 +1065,7 @@
   padding: 0 8px;
   height: 36px;
   font-size: 15px;
+  min-width: 0;
 }
 
 .chat-input-bar input::placeholder {
@@ -1079,6 +1081,7 @@
   align-items: center;
   justify-content: center;
   transition: color 0.2s, transform 0.1s;
+  flex-shrink: 0;
 }
 
 .btn-send:hover {
